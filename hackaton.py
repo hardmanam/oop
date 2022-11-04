@@ -8,20 +8,20 @@ class RegisterMixin:
             return max(ids) + 1
         return 1
     def register(self, name, password):
-        if name in [user['name'] for user in self.data]:
+        if name in [user['name'] for user in data_names]:
             raise Exception('Такой юзер уже существует!')
-        self.data.append({
-            'id': self.__max_id(self.data),
+        data_names.append({
+            'id': self.__max_id(data_names),
             'name': name,
             'password': validate_password(password)
             })
-        json.dump(self.data, open('user.json', 'w'), sort_keys=True, indent=4)
+        json.dump(data_names, open('user.json', 'w'), sort_keys=True, indent=4)
         return 'Регистрация прошла успешно'
 
 class LoginMixin:
     def login(self, name, password):
-        if name in [user['name'] for user in self.data]:
-            user = [i for i in self.data if name == i['name']] 
+        if name in [user['name'] for user in data_names]:
+            user = [i for i in data_names if name == i['name']] 
             if password == user[0]['password']:
                 return 'Вы успешно залогинились!'
             raise Exception('Неверный пароль!')
@@ -31,43 +31,42 @@ class LoginMixin:
 class ChangePasswordMixin:
     def change_password(self, name, password, new_password):        
         validate_password(new_password)
-        user = [i for i in self.data if name == i['name']]
+        user = [i for i in data_names if name == i['name']]
         if password == user[0]['password']:
-            index = self.data.index(user[0])
-            self.data[index]['password'] = new_password
-            json.dump(self.data, open('user.json', 'w'), sort_keys=True, indent=4)
+            index = data_names.index(user[0])
+            data_names[index]['password'] = new_password
+            json.dump(data_names, open('user.json', 'w'), sort_keys=True, indent=4)
             return 'Успешно поменяли пароль'
         raise Exception('Старый пароль не совпадает')
 
 class ChangeUserNameMixin:
     def __correct_name(self,name):
-        names = [user['name'] for user in self.data]
+        names = [user['name'] for user in data_names]
         while name in names:
             print('Пользователь с наким именем существует')
             name = input('Введите новое имя: ')
         return name
     def change_name(self, name, new_name):
-        names = [user['name'] for user in self.data]
+        names = [user['name'] for user in data_names]
         if name in names:
-            user = [user for user in self.data if name == user['name']]
-            index = self.data.index(user[0])
-            self.data[index]['name'] = self.__correct_name(new_name)
-            json.dump(self.data, open('user.json', 'w'), sort_keys=True, indent=4)
+            user = [user for user in data_names if name == user['name']]
+            index = data_names.index(user[0])
+            data_names[index]['name'] = self.__correct_name(new_name)
+            json.dump(data_names, open('user.json', 'w'), sort_keys=True, indent=4)
             return 'Успешно сменили имя'
         raise Exception('Нет такого юзера в БД')
 
 class CheckOwnerMixin:
     def check(self, owner):
-        if owner in [user['name'] for user in self.data]:
+        if owner in [user['name'] for user in data_names]:
             return 'Пост успешно создан'
         raise Exception('Нет такого пользователя')
 
 
 class User(RegisterMixin, LoginMixin, ChangePasswordMixin, ChangeUserNameMixin):
-    data = json.load(open('user.json'))
+    pass
 
 class Post(CheckOwnerMixin):
-    data = json.load(open('user.json'))
     def __init__(self, title, description, price, quantity, owner):
         self.title = title
         self.description = description
@@ -85,6 +84,8 @@ def validate_password(pass1):
         raise Exception('Пароль должен состоять из букв и цифр!')
     return pass1
 
+
+data_names = json.load(open('user.json'))
 obj1 = User()
 print(obj1.register('John111', '12345667ad'))
 print(obj1.login('John111', '12345667ad'))
